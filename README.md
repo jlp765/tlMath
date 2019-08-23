@@ -23,3 +23,23 @@ Conversion of non-numeric strings to a generic number
 results in a 0.0 float result, so doing operations
 using a non-numeric string is the same as doing that
 operation with a zero float value
+
+## Examples
+for more examples, view the assertions at the end of the tlMath.nim file
+
+```Nim
+  var
+    a, b, c: TLObj
+    f1 = 2.0
+    i1 = 2
+  a = 2.toTL
+  assert( a.isInt      == true )
+  assert( a.val        == 2.0  )
+  assert( a.val.int    == 2    )
+  assert( a / f1       == 1.0  )
+  assert( a / i1.float == 1.0  )
+  assert( a / i1       == 1.0  )
+  assert( a * f1       == 3.0  )
+  assert( a * i1.float == 4.0  )
+  assert( a * i1       == 4.0  )
+```
