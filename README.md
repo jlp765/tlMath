@@ -1,5 +1,5 @@
 # tlMath
-A typeless Math library (awk-like math, handling int,float and string)
+A **Type-Less Math library** (awk-like math, handling int,float and string)
 similar to how awk can handle multiple types
 
 This is NOT as fast as handling the types yourself
