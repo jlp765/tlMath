@@ -1,8 +1,9 @@
 ############################################################
-# genMath
+# tlMath
 ############################################################
 #
-# math type-independent (string, int, float)
+# Type Less math 
+# or type-independent (string, int, float)
 # similar to how awk can handle multiple types
 #
 # This is NOT as fast as handling the types yourself
@@ -32,18 +33,18 @@
 import math, strutils
 
 type
-  gmObj* = object
+  TLObj* = object
     ## base generic Math object
     val*: float    ## actual value used in calculations
     isInt*: bool   ## track if number is actually an integer
 
-proc `=`*(a: var gmObj, b: gmObj) =
+proc `=`*(a: var TLObj, b: TLObj) =
   ## `a` is assigned the value of b
   ## keeping track of whether b was an integer value
   a.val = b.val
   a.isInt = b.isInt
 
-proc newGM*(s: string): gmObj =
+proc newTL*(s: string): TLObj =
   result.val = 0.0
   result.isInt = false
   try:
@@ -51,30 +52,30 @@ proc newGM*(s: string): gmObj =
     result.isInt = (not s.contains("."))
   except: discard
 
-proc newGM(i: int): gmObj =
+proc newTL(i: int): TLObj =
   result.val = i.toFloat
   result.isInt = true
 
-proc newGM(f: float): gmObj =
+proc newTL(f: float): TLObj =
   result.val = f
   result.isInt = false
 
-proc toGM*(s: string): gmObj = newGM(s)
+proc toTL*(s: string): TLObj = newTL(s)
   ## return a string as a generic Math object
   ## Non-numeric strings produce a zero float number
-proc toGM*(i: SomeInteger): gmObj = newGM(i)
+proc toTL*(i: SomeInteger): TLObj = newTL(i)
   ## return an integer as a generic Math object
-proc toGM*(f: float): gmObj = newGM(f)
+proc toTL*(f: float): TLObj = newTL(f)
   ## return a float as a generic Math object
 
-proc toInt*(g: gmObj): int =
+proc toInt*(g: TLObj): int =
   ## return  the generic Math object rounded to an integer
   result = g.val.toInt
-proc toFloat*(g: gmObj): float =
+proc toFloat*(g: TLObj): float =
   ## return the generic Math object as a float
   result = g.val
 
-proc `$`*[T: gmObj](a: T): string =
+proc `$`*[T: TLObj](a: T): string =
   ## return the string representation of a
   ## (as an integer if a was an integer number,
   ## else as a float representation)
@@ -84,108 +85,108 @@ proc `$`*[T: gmObj](a: T): string =
     result = $a.val
 
 template doCmp2NewAnyResult*(Op) =      # Comparison procs
-  proc Op*[T: gmObj](a, b: T): bool =
+  proc Op*[T: TLObj](a, b: T): bool =
     if a.isInt and b.isInt:
       result = Op(a.toInt, b.toInt)
     else:
       result = Op(a.val, b.val)
-  proc Op*[T: gmObj](a: T, b: int): bool =
+  proc Op*[T: TLObj](a: T, b: int): bool =
     if a.isInt:
       result = Op(a.toInt, b)
     else:
       result = Op(a.val, b.float)
-  proc Op*[T: gmObj](a: T, b: float): bool =
+  proc Op*[T: TLObj](a: T, b: float): bool =
     result = Op(a.val,  b)
-  proc Op*[T: gmObj](a: T, b: string): bool =
-    result = Op(a, toGM(b))
+  proc Op*[T: TLObj](a: T, b: string): bool =
+    result = Op(a, toTL(b))
 
 template doOp2NewAnyResult*(fname) =
-  proc fname*[T: gmObj](a, b: T): T =
+  proc fname*[T: TLObj](a, b: T): T =
     result.val = fname(a.val,  b.val)
     if a.isInt and b.isInt:
       result.isInt = true
     else:
       result.isInt = false
-  proc fname*[T: gmObj](a: T, b: int): T =
+  proc fname*[T: TLObj](a: T, b: int): T =
     result.val = fname(a.val,  b.float)
     if a.isInt:
       result.isInt = true
     else:
       result.isInt = false
-  proc fname*[T: gmObj](a: T, b: float): T =
+  proc fname*[T: TLObj](a: T, b: float): T =
     result.val = fname(a.val,  b)
     result.isInt = false
-  proc fname*[T: gmObj](a: T, b: string): T =
-    result = fname(a, toGM(b))
+  proc fname*[T: TLObj](a: T, b: string): T =
+    result = fname(a, toTL(b))
 
 template doOp2NewFloatResult*(fname) =
-  proc fname*[T: gmObj](a, b: T): T =
+  proc fname*[T: TLObj](a, b: T): T =
     result.val = fname[float](a.val, b.val)
     result.isInt = false
-  proc fname*[T: gmObj](a: T, b: int): T =
+  proc fname*[T: TLObj](a: T, b: int): T =
     result.val = fname[float](a.val, b.float)
     result.isInt = false
-  proc fname*[T: gmObj](a: T, b: float): T =
+  proc fname*[T: TLObj](a: T, b: float): T =
     result.val = fname[float](a.val, b)
     result.isInt = false
-  proc fname*[T: gmObj](a: T, s: string): T =
-    let z = toGM(s)
+  proc fname*[T: TLObj](a: T, s: string): T =
+    let z = toTL(s)
     result.val = fname(a.val, z.val)
     result.isInt = false
 
 template doOp2UpdateAnyResult*(fname) =
-  proc fname*[T: gmObj](a: var T, b: T) =
+  proc fname*[T: TLObj](a: var T, b: T) =
     fname(a.val,  b.val)
     if a.isInt and b.isInt:
       a.isInt = true
     else:
       a.isInt = false
-  proc fname*[T: gmObj](a: var T, b: int) =
+  proc fname*[T: TLObj](a: var T, b: int) =
     fname(a.val,  b.float)
     if a.isInt:
       a.isInt = true
     else:
       a.isInt = false
-  proc fname*[T: gmObj](a: var T, b: float) =
+  proc fname*[T: TLObj](a: var T, b: float) =
     fname(a.val,  b)
     a.isInt = false
-  proc fname*[T: gmObj](a: var T, b: string) =
-    fname(a, toGM(b))
+  proc fname*[T: TLObj](a: var T, b: string) =
+    fname(a, toTL(b))
 
 template doOp2UpdateFloatResult*(fname) =
-  proc fname*[T: gmObj](a: var T, b: T) =
+  proc fname*[T: TLObj](a: var T, b: T) =
     fname(a.val,  b.val)
     a.isInt = false
-  proc fname*[T: gmObj](a: var T, b: int) =
+  proc fname*[T: TLObj](a: var T, b: int) =
     fname(a.val,  b.float)
     a.isInt = false
-  proc fname*[T: gmObj](a: var T, b: float) =
+  proc fname*[T: TLObj](a: var T, b: float) =
     fname(a.val,  b)
     a.isInt = false
-  proc fname*[T: gmObj](a: var T, s: string) =
-    let z = toGM(s)
+  proc fname*[T: TLObj](a: var T, s: string) =
+    let z = toTL(s)
     fname(a.val, z.val)
     a.isInt = false
 
 template doFunc1NewAnyResult*(fname) =
-  proc fname*[T: gmObj](a: T): T =
-    result = newGM(fname(a.val))
+  proc fname*[T: TLObj](a: T): T =
+    result = newTL(fname(a.val))
     if a.isInt:
       result.isInt = true
 
 template doFunc1NewFloatResult*(fname) =
-  proc fname*[T: gmObj](a: T): T =
+  proc fname*[T: TLObj](a: T): T =
     result.val = fname(a.val)
     result.isInt = false
 
 template doFunc2NewAnyResult*(fname) =
-  proc fname*[T: gmObj](a, b: T): T =
-    result = newGM(fname(a.val, b.val))
+  proc fname*[T: TLObj](a, b: T): T =
+    result = newTL(fname(a.val, b.val))
     if a.isInt and b.isInt:
       result.isInt = true
 
 template doFunc2NewFloatResult*(fname) =
-  proc fname*[T: gmObj](a, b: T): T =
+  proc fname*[T: TLObj](a, b: T): T =
     result.val = fname(a.val, b.val)
     result.isInt = false
 
@@ -193,13 +194,13 @@ doCmp2NewAnyResult(`==`)
 doCmp2NewAnyResult(`!=`)
 doCmp2NewAnyResult(`>`)
 doCmp2NewAnyResult(`<`)
-proc `>=`*(a, b: gmObj): bool =
+proc `>=`*(a, b: TLObj): bool =
   if a.isInt and b.isInt:
     result = (a.toInt >= b.toInt)
   else:
     result = `>`(a,b) or `==`(a,b)
 
-proc `<=`*(a, b: gmObj): bool =
+proc `<=`*(a, b: TLObj): bool =
   if a.isInt and b.isInt:
     result = (a.toInt <= b.toInt)
   else:
@@ -220,31 +221,31 @@ doFunc1NewFloatResult(arccos)
 doFunc1NewFloatResult(arcsin)
 doFunc2NewFloatResult(arctan2)
 doFunc1NewFloatResult(arctan)
-proc binom*(a, b: gmObj): int = binom(a.toInt, b.toInt)
+proc binom*(a, b: TLObj): int = binom(a.toInt, b.toInt)
 doFunc1NewFloatResult(cbrt)
 doFunc1NewFloatResult(ceil)
-proc classify*(x: gmObj): FloatClass = classify(x.val)
+proc classify*(x: TLObj): FloatClass = classify(x.val)
 doFunc1NewFloatResult(cosh)
 doFunc1NewFloatResult(cos)
-proc countBits32*(x: gmObj): int = countBits32(int32(x.toInt))
+proc countBits32*(x: TLObj): int = countBits32(int32(x.toInt))
 doFunc1NewFloatResult(degToRad)
-proc `div`*(a, b: gmObj): gmObj = toGM(`div`(a.toInt, b.toInt))
-proc `div`*(a: gmObj, b: int): gmObj = toGM(`div`(a.toInt, b))
-proc `div`*(a: gmObj, b: float): gmObj = toGM(`div`(a.toInt, b.toInt))
-proc `div`*(a: gmObj, s: string): gmObj =
-  var b = toGM(s)
-  #result = toGM(`div`(a.toInt, b.toInt))
+proc `div`*(a, b: TLObj): TLObj = toTL(`div`(a.toInt, b.toInt))
+proc `div`*(a: TLObj, b: int): TLObj = toTL(`div`(a.toInt, b))
+proc `div`*(a: TLObj, b: float): TLObj = toTL(`div`(a.toInt, b.toInt))
+proc `div`*(a: TLObj, s: string): TLObj =
+  var b = toTL(s)
+  #result = toTL(`div`(a.toInt, b.toInt))
   result = `div`(a, b)
 doFunc1NewFloatResult(`div`)
 doFunc1NewFloatResult(erfc)
 doFunc1NewFloatResult(erf)
 doFunc1NewFloatResult(exp)
-proc fac*(x: gmObj): int = fac(x.toInt)
+proc fac*(x: TLObj): int = fac(x.toInt)
 doFunc1NewFloatResult(floor)
 doFunc2NewFloatResult(fmod)
-proc frexp*(x: gmObj, exponent: var int): float = frexp(x.val, exponent)
+proc frexp*(x: TLObj, exponent: var int): float = frexp(x.val, exponent)
 
-proc gcd*(a, b: gmObj): gmObj =
+proc gcd*(a, b: TLObj): TLObj =
   ## Computes the greatest common divisor of ``x`` and ``y``.
   ## Note that for floats, the result cannot always be interpreted as
   ## "greatest decimal `z` such that ``z*N == x and z*M == y``
@@ -255,20 +256,20 @@ proc gcd*(a, b: gmObj): gmObj =
   while y != 0:
     x = x mod y
     swap x, y
-  result = toGM(abs(x))
+  result = toTL(abs(x))
 doFunc2NewFloatResult(hypot)
-proc isPowerOfTwo*(x: gmObj): bool = isPowerOfTwo(x.toInt)
+proc isPowerOfTwo*(x: TLObj): bool = isPowerOfTwo(x.toInt)
 
-proc lcm*[T: gmObj](x, y: T): gmObj =
+proc lcm*[T: TLObj](x, y: T): TLObj =
   ## Computes the least common multiple of ``x`` and ``y``.
-  result = toGM(`div`(x.toInt,  toInt(gcd[float](x.val, y.val))) * y.toInt)
+  result = toTL(`div`(x.toInt, toInt(gcd(x.toFloat, y.toFloat))) * y.toInt)
 
 doFunc1NewFloatResult(lgamma)
 doFunc1NewFloatResult(ln)
 doFunc1NewFloatResult(log10)
 doFunc1NewFloatResult(log2)
 doFunc2NewFloatResult(`mod`)
-proc nextPowerOfTwo*(x: gmObj): int = nextPowerOfTwo(x.toInt)
+proc nextPowerOfTwo*(x: TLObj): int = nextPowerOfTwo(x.toInt)
 doFunc2NewFloatResult(pow)
 doFunc1NewFloatResult(radToDeg)
 
@@ -276,18 +277,18 @@ proc round0(x: float32): float32 {.importc: "roundf", header: "<math.h>".}
 proc round0(x: float64): float64 {.importc: "round", header: "<math.h>".}
 
 doFunc1NewAnyResult(round0)
-proc round*(x: gmObj, places: int = 0): float = round(x.val, places)
+proc round*(x: TLObj, places: int = 0): float = round(x.val, places)
 doFunc1NewFloatResult(sinh)
 doFunc1NewFloatResult(sin)
-proc splitDecimal*(x: gmObj): tuple[intpart, floatpart: float] = splitDecimal(x.val)
+proc splitDecimal*(x: TLObj): tuple[intpart, floatpart: float] = splitDecimal(x.val)
 doFunc1NewFloatResult(sqrt)
 doFunc1NewFloatResult(tanh)
 doFunc1NewFloatResult(tan)
 doFunc1NewFloatResult(tgamma)
 doFunc1NewFloatResult(trunc)
-#proc `^`*(a, b: gmObj): gmObj = pow(a,b)
+#proc `^`*(a, b: TLObj): TLObj = pow(a,b)
 
-proc `==~`(x, y: gmObj; prec: float = 1e-9): bool =
+proc `==~`(x, y: TLObj; prec: float = 1e-9): bool =
   ## Inexact comparison of float values
   ## return true if absolute difference is < 1e-9
   result = (abs(x.val - y.val) < prec)
@@ -295,13 +296,21 @@ proc `==~`(x, y: gmObj; prec: float = 1e-9): bool =
 ############# TESTING ################
 when isMainModule:
   var
-    a, b, c: gmObj
-  a = 2.toGM
+    a, b, c: TLObj
+    f1 = 2.0
+    i1 = 2
+  a = 2.toTL
   assert(a.isInt == true)
   assert(a.val == 2.0)
   assert(a.val.int == 2)
+  assert(a / f1 == 1.0)
+  assert(a / i1.float == 1.0)
+  assert(a / i1 == 1.0)
+  assert(a * f1 == 3.0)
+  assert(a * i1.float == 4.0)
+  assert(a * i1 == 4.0)
 
-  b = "222".toGM
+  b = "222".toTL
   assert("222".parseFloat == b.val)
   assert(b.val == 222.0)
   assert(b.isInt == true)
@@ -324,14 +333,14 @@ when isMainModule:
     assert(c.val == 222*2)
     assert($c == "444")
 
-    assert(b / "2" == toGM(111.0))
-    assert(b / "2.0" == toGM(111.0))
-    assert(b / 2 == toGM(111.0))
-    assert(b / 2.0  == toGM(111.0))
-    assert(b * "2" == toGM(444))
-    assert(b * "2.0" == toGM(444.0))
-    assert(b * 2 == toGM(444))
-    assert(b * 2.0  == toGM(444.0))
+    assert(b / "2" == toTL(111.0))
+    assert(b / "2.0" == toTL(111.0))
+    assert(b / 2 == toTL(111.0))
+    assert(b / 2.0 == toTL(111.0))
+    assert(b * "2" == toTL(444))
+    assert(b * "2.0" == toTL(444.0))
+    assert(b * 2 == toTL(444))
+    assert(b * 2.0 == toTL(444.0))
 
   block:  # # test:  += -= *= /=
     b += a
@@ -354,28 +363,28 @@ when isMainModule:
     c = b
     assert(c == b)
     b /= "2"
-    assert(b == toGM(111.0))
+    assert(b == toTL(111.0))
     b = c
     b /= "2.0"
-    assert(b == toGM(111.0))
+    assert(b == toTL(111.0))
     b = c
     b /= 2
-    assert(b == toGM(111.0))
+    assert(b == toTL(111.0))
     b = c
     b /= 2.0
-    assert(b == toGM(111.0))
+    assert(b == toTL(111.0))
     b = c
     b *= "2"
-    assert(b == toGM(444))
+    assert(b == toTL(444))
     b = c
     b *= "2.0"
-    assert(b == toGM(444.0))
+    assert(b == toTL(444.0))
     b = c
     b *= 2
-    assert(b == toGM(444))
+    assert(b == toTL(444))
     b = c
     b *= 2.0
-    assert(b == toGM(444.0))
+    assert(b == toTL(444.0))
 
   block:  # test:  == != < > <= >=
     assert(a != b)
@@ -385,27 +394,27 @@ when isMainModule:
     assert(b > a)
     assert(a <= b)
     assert(b >= a)
-    assert(toGM(2) >= toGM("2"))
-    assert(toGM(2.0) >= toGM("2.0"))
-    assert(toGM(2) <= toGM("2"))
-    assert(toGM(2.0) <= toGM("2.0"))
-    assert(toGM(2.0) == toGM("2.0"))
-    assert(toGM(2.12345678) == toGM("2.12345678"))
-    assert(toGM(1/3) !=  toGM("0.3333333333"))
-    assert(toGM(1/3) ==~  toGM("0.333333333"))
+    assert(toTL(2) >= toTL("2"))
+    assert(toTL(2.0) >= toTL("2.0"))
+    assert(toTL(2) <= toTL("2"))
+    assert(toTL(2.0) <= toTL("2.0"))
+    assert(toTL(2.0) == toTL("2.0"))
+    assert(toTL(2.12345678) == toTL("2.12345678"))
+    assert(toTL(1/3) != toTL("0.3333333333"))
+    assert(toTL(1/3) ==~ toTL("0.333333333"))
 
   block:  # test: invalid string conversions
-    assert(toGM("wow") == 0.0)
-    assert(toGM(2) + toGM("oops") == 2.0)
-    b = toGM(2) + toGM("oops")
+    assert(toTL("wow") == 0.0)
+    assert(toTL(2) + toTL("oops") == 2.0)
+    b = toTL(2) + toTL("oops")
     assert(b == 2)
-    b = toGM("oops")
+    b = toTL("oops")
     assert(b == 0.0)
-    b = toGM(2)
-    assert(b / toGM("undefined") == 2.0/0.0)
+    b = toTL(2)
+    assert(b / toTL("undefined") == 2.0/0.0)
 
   block:   # test: math functions from system math lib
-    b = toGM(-0.2)
+    b = toTL(-0.2)
     c = b
     assert(abs(b) == abs(-0.2))
     assert(arccos(b) == arccos(-0.2))
@@ -433,19 +442,19 @@ when isMainModule:
     assert(gcd(b,c) == gcd(0,0))
     assert(hypot(b,c) == hypot(-0.2,-0.2))
     assert(isPowerOfTwo(b) == isPowerOfTwo(0))
-    b = toGM(2)
-    c = toGM(3)
+    b = toTL(2)
+    c = toTL(3)
     d = 2
     e = 3
     assert(lcm(b,c) == lcm(d, e))
-    b = toGM(-0.2)
+    b = toTL(-0.2)
     assert(lgamma(b) == lgamma(-0.2))
     assert(ln(abs(b)) == ln(0.2))
     assert(log10(abs(b)) == log10(0.2))
     assert(log2(abs(b)) == log2(0.2))
 
-    b = toGM(2)
-    c = toGM(3)
+    b = toTL(2)
+    c = toTL(3)
     d = 2
     e = 3
     assert(`mod`(b,c) == `mod`(d,e))
@@ -453,12 +462,12 @@ when isMainModule:
     assert(nextPowerOfTwo(b) == nextPowerOfTwo(d))
     assert(pow(b,c) == pow(2.0,3.0))
     assert(radToDeg(b) == radToDeg(2.0))
-    b = toGM(2.34567)
+    b = toTL(2.34567)
     assert(round0(b) == 2.0)
     assert(round0(b * -1) == -2)
     assert(round(b,3) == 2.346)
 
-    b = toGM(-0.2)
+    b = toTL(-0.2)
     assert(sinh(b) == sinh(-0.2))
     assert(sin(b) == sin(-0.2))
     assert(tanh(b) == tanh(-0.2))
@@ -466,6 +475,6 @@ when isMainModule:
     assert(tgamma(b) == tgamma(-0.2))
     assert(trunc(b) == trunc(-0.2))
 
-    assert(sqrt(toGM(43)) == sqrt(43.0))
-    assert(splitDecimal(toGM(43.21)) == splitDecimal(43.21))
+    assert(sqrt(toTL(43)) == sqrt(43.0))
+    assert(splitDecimal(toTL(43.21)) == splitDecimal(43.21))
     #assert((b ^ c) == (d ^ e))
