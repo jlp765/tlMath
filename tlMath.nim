@@ -2,7 +2,7 @@
 # tlMath
 ############################################################
 #
-# Type Less math 
+# Type-Less math
 # or type-independent (string, int, float)
 # similar to how awk can handle multiple types
 #
@@ -103,16 +103,10 @@ template doCmp2NewAnyResult*(Op) =      # Comparison procs
 template doOp2NewAnyResult*(fname) =
   proc fname*[T: TLObj](a, b: T): T =
     result.val = fname(a.val,  b.val)
-    if a.isInt and b.isInt:
-      result.isInt = true
-    else:
-      result.isInt = false
+    result.isInt = (a.isInt and b.isInt)
   proc fname*[T: TLObj](a: T, b: int): T =
     result.val = fname(a.val,  b.float)
-    if a.isInt:
-      result.isInt = true
-    else:
-      result.isInt = false
+    result.isInt = a.isInt
   proc fname*[T: TLObj](a: T, b: float): T =
     result.val = fname(a.val,  b)
     result.isInt = false
@@ -137,16 +131,9 @@ template doOp2NewFloatResult*(fname) =
 template doOp2UpdateAnyResult*(fname) =
   proc fname*[T: TLObj](a: var T, b: T) =
     fname(a.val,  b.val)
-    if a.isInt and b.isInt:
-      a.isInt = true
-    else:
-      a.isInt = false
+    a.isInt = (a.isInt and b.isInt)
   proc fname*[T: TLObj](a: var T, b: int) =
     fname(a.val,  b.float)
-    if a.isInt:
-      a.isInt = true
-    else:
-      a.isInt = false
   proc fname*[T: TLObj](a: var T, b: float) =
     fname(a.val,  b)
     a.isInt = false
@@ -171,8 +158,7 @@ template doOp2UpdateFloatResult*(fname) =
 template doFunc1NewAnyResult*(fname) =
   proc fname*[T: TLObj](a: T): T =
     result = newTL(fname(a.val))
-    if a.isInt:
-      result.isInt = true
+    result.isInt = a.isInt
 
 template doFunc1NewFloatResult*(fname) =
   proc fname*[T: TLObj](a: T): T =
@@ -182,8 +168,7 @@ template doFunc1NewFloatResult*(fname) =
 template doFunc2NewAnyResult*(fname) =
   proc fname*[T: TLObj](a, b: T): T =
     result = newTL(fname(a.val, b.val))
-    if a.isInt and b.isInt:
-      result.isInt = true
+    result.isInt = (a.isInt and b.isInt)
 
 template doFunc2NewFloatResult*(fname) =
   proc fname*[T: TLObj](a, b: T): T =
@@ -234,7 +219,6 @@ proc `div`*(a: TLObj, b: int): TLObj = toTL(`div`(a.toInt, b))
 proc `div`*(a: TLObj, b: float): TLObj = toTL(`div`(a.toInt, b.toInt))
 proc `div`*(a: TLObj, s: string): TLObj =
   var b = toTL(s)
-  #result = toTL(`div`(a.toInt, b.toInt))
   result = `div`(a, b)
 doFunc1NewFloatResult(`div`)
 doFunc1NewFloatResult(erfc)
@@ -242,7 +226,13 @@ doFunc1NewFloatResult(erf)
 doFunc1NewFloatResult(exp)
 proc fac*(x: TLObj): int = fac(x.toInt)
 doFunc1NewFloatResult(floor)
-doFunc2NewFloatResult(fmod)
+#doFunc2NewFloatResult(fmod)
+proc `mod`*(a, b: TLObj): TLObj = toTL(`mod`(a.val, b.val))
+proc `mod`*(a: TLObj, b: int): TLObj = toTL(`mod`(a.val, b.float))
+proc `mod`*(a: TLObj, b: float): TLObj = toTL(`mod`(a.val, b))
+proc `mod`*(a: TLObj, s: string): TLObj =
+  var b = toTL(s)
+  result = `mod`(a, b)
 proc frexp*(x: TLObj, exponent: var int): float = frexp(x.val, exponent)
 
 proc gcd*(a, b: TLObj): TLObj =
@@ -284,7 +274,7 @@ proc splitDecimal*(x: TLObj): tuple[intpart, floatpart: float] = splitDecimal(x.
 doFunc1NewFloatResult(sqrt)
 doFunc1NewFloatResult(tanh)
 doFunc1NewFloatResult(tan)
-doFunc1NewFloatResult(tgamma)
+doFunc1NewFloatResult(gamma)
 doFunc1NewFloatResult(trunc)
 #proc `^`*(a, b: TLObj): TLObj = pow(a,b)
 
@@ -306,7 +296,7 @@ when isMainModule:
   assert(a / f1 == 1.0)
   assert(a / i1.float == 1.0)
   assert(a / i1 == 1.0)
-  assert(a * f1 == 3.0)
+  assert(a * f1 == 4.0)
   assert(a * i1.float == 4.0)
   assert(a * i1 == 4.0)
 
@@ -416,6 +406,7 @@ when isMainModule:
   block:   # test: math functions from system math lib
     b = toTL(-0.2)
     c = b
+    var x = b.val
     assert(abs(b) == abs(-0.2))
     assert(arccos(b) == arccos(-0.2))
     assert(arcsin(b) == arcsin(-0.2))
@@ -429,18 +420,18 @@ when isMainModule:
     assert(cos(b) == cos(-0.2))
     assert(countBits32(b) == countBits32(0))
     assert(degToRad(b) == degToRad(-0.2))
-    assert(erfc(b) == erfc(-0.2))
-    assert(erf(b) == erf(-0.2))
-    assert(exp(b) == exp(-0.2))
+    assert(erfc(b) == erfc(x))
+    assert(erf(b) == erf(x))
+    assert(exp(b) == exp(x))
     assert(fac(b) == fac(0))
     assert(floor(b) == floor(-0.2))
-    assert(fmod(b,c) == fmod(-0.2,-0.2))
+    assert(`mod`(b,c) == `mod`(x,x))
     var
       d = 0
       e = 0
     assert(frexp(b,d) == frexp(-0.2,e))
     assert(gcd(b,c) == gcd(0,0))
-    assert(hypot(b,c) == hypot(-0.2,-0.2))
+    assert(hypot(b,c) == hypot(x,x))
     assert(isPowerOfTwo(b) == isPowerOfTwo(0))
     b = toTL(2)
     c = toTL(3)
@@ -460,7 +451,7 @@ when isMainModule:
     assert(`mod`(b,c) == `mod`(d,e))
     assert(b mod c == d mod e)
     assert(nextPowerOfTwo(b) == nextPowerOfTwo(d))
-    assert(pow(b,c) == pow(2.0,3.0))
+    assert(pow(b,c) == pow(2.0, 3.0))
     assert(radToDeg(b) == radToDeg(2.0))
     b = toTL(2.34567)
     assert(round0(b) == 2.0)
@@ -468,12 +459,13 @@ when isMainModule:
     assert(round(b,3) == 2.346)
 
     b = toTL(-0.2)
-    assert(sinh(b) == sinh(-0.2))
-    assert(sin(b) == sin(-0.2))
-    assert(tanh(b) == tanh(-0.2))
-    assert(tan(b) == tan(-0.2))
-    assert(tgamma(b) == tgamma(-0.2))
-    assert(trunc(b) == trunc(-0.2))
+    x = b.val
+    assert(sinh(b) == sinh(x))
+    assert(sin(b) == sin(x))
+    assert(tanh(b) == tanh(x))
+    assert(tan(b) == tan(x))
+    assert(gamma(b) == gamma(x))
+    assert(trunc(b) == trunc(x))
 
     assert(sqrt(toTL(43)) == sqrt(43.0))
     assert(splitDecimal(toTL(43.21)) == splitDecimal(43.21))
