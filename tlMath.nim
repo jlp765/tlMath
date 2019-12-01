@@ -33,18 +33,18 @@
 import math, strutils
 
 type
-  TLObj* = object
+  TLMObj* = object
     ## base generic Math object
     val*: float    ## actual value used in calculations
     isInt*: bool   ## track if number is actually an integer
 
-proc `=`*(a: var TLObj, b: TLObj) =
+proc `=`*(a: var TLMObj, b: TLMObj) =
   ## `a` is assigned the value of b
   ## keeping track of whether b was an integer value
   a.val = b.val
   a.isInt = b.isInt
 
-proc newTL*(s: string): TLObj =
+proc newTLM*(s: string): TLMObj =
   result.val = 0.0
   result.isInt = false
   try:
@@ -52,30 +52,30 @@ proc newTL*(s: string): TLObj =
     result.isInt = (not s.contains("."))
   except: discard
 
-proc newTL(i: int): TLObj =
+proc newTLM(i: int): TLMObj =
   result.val = i.toFloat
   result.isInt = true
 
-proc newTL(f: float): TLObj =
+proc newTLM(f: float): TLMObj =
   result.val = f
   result.isInt = false
 
-proc toTL*(s: string): TLObj = newTL(s)
+proc toTLM*(s: string): TLMObj = newTLM(s)
   ## return a string as a generic Math object
   ## Non-numeric strings produce a zero float number
-proc toTL*(i: SomeInteger): TLObj = newTL(i)
+proc toTLM*(i: SomeInteger): TLMObj = newTLM(i)
   ## return an integer as a generic Math object
-proc toTL*(f: float): TLObj = newTL(f)
+proc toTLM*(f: float): TLMObj = newTLM(f)
   ## return a float as a generic Math object
 
-proc toInt*(g: TLObj): int =
+proc toInt*(g: TLMObj): int =
   ## return  the generic Math object rounded to an integer
   result = g.val.toInt
-proc toFloat*(g: TLObj): float =
+proc toFloat*(g: TLMObj): float =
   ## return the generic Math object as a float
   result = g.val
 
-proc `$`*[T: TLObj](a: T): string =
+proc `$`*[T: TLMObj](a: T): string =
   ## return the string representation of a
   ## (as an integer if a was an integer number,
   ## else as a float representation)
@@ -85,93 +85,93 @@ proc `$`*[T: TLObj](a: T): string =
     result = $a.val
 
 template doCmp2NewAnyResult*(Op) =      # Comparison procs
-  proc Op*[T: TLObj](a, b: T): bool =
+  proc Op*[T: TLMObj](a, b: T): bool =
     if a.isInt and b.isInt:
       result = Op(a.toInt, b.toInt)
     else:
       result = Op(a.val, b.val)
-  proc Op*[T: TLObj](a: T, b: int): bool =
+  proc Op*[T: TLMObj](a: T, b: int): bool =
     if a.isInt:
       result = Op(a.toInt, b)
     else:
       result = Op(a.val, b.float)
-  proc Op*[T: TLObj](a: T, b: float): bool =
+  proc Op*[T: TLMObj](a: T, b: float): bool =
     result = Op(a.val,  b)
-  proc Op*[T: TLObj](a: T, b: string): bool =
-    result = Op(a, toTL(b))
+  proc Op*[T: TLMObj](a: T, b: string): bool =
+    result = Op(a, toTLM(b))
 
 template doOp2NewAnyResult*(fname) =
-  proc fname*[T: TLObj](a, b: T): T =
+  proc fname*[T: TLMObj](a, b: T): T =
     result.val = fname(a.val,  b.val)
     result.isInt = (a.isInt and b.isInt)
-  proc fname*[T: TLObj](a: T, b: int): T =
+  proc fname*[T: TLMObj](a: T, b: int): T =
     result.val = fname(a.val,  b.float)
     result.isInt = a.isInt
-  proc fname*[T: TLObj](a: T, b: float): T =
+  proc fname*[T: TLMObj](a: T, b: float): T =
     result.val = fname(a.val,  b)
     result.isInt = false
-  proc fname*[T: TLObj](a: T, b: string): T =
-    result = fname(a, toTL(b))
+  proc fname*[T: TLMObj](a: T, b: string): T =
+    result = fname(a, toTLM(b))
 
 template doOp2NewFloatResult*(fname) =
-  proc fname*[T: TLObj](a, b: T): T =
+  proc fname*[T: TLMObj](a, b: T): T =
     result.val = fname[float](a.val, b.val)
     result.isInt = false
-  proc fname*[T: TLObj](a: T, b: int): T =
+  proc fname*[T: TLMObj](a: T, b: int): T =
     result.val = fname[float](a.val, b.float)
     result.isInt = false
-  proc fname*[T: TLObj](a: T, b: float): T =
+  proc fname*[T: TLMObj](a: T, b: float): T =
     result.val = fname[float](a.val, b)
     result.isInt = false
-  proc fname*[T: TLObj](a: T, s: string): T =
-    let z = toTL(s)
+  proc fname*[T: TLMObj](a: T, s: string): T =
+    let z = toTLM(s)
     result.val = fname(a.val, z.val)
     result.isInt = false
 
 template doOp2UpdateAnyResult*(fname) =
-  proc fname*[T: TLObj](a: var T, b: T) =
+  proc fname*[T: TLMObj](a: var T, b: T) =
     fname(a.val,  b.val)
     a.isInt = (a.isInt and b.isInt)
-  proc fname*[T: TLObj](a: var T, b: int) =
+  proc fname*[T: TLMObj](a: var T, b: int) =
     fname(a.val,  b.float)
-  proc fname*[T: TLObj](a: var T, b: float) =
+  proc fname*[T: TLMObj](a: var T, b: float) =
     fname(a.val,  b)
     a.isInt = false
-  proc fname*[T: TLObj](a: var T, b: string) =
-    fname(a, toTL(b))
+  proc fname*[T: TLMObj](a: var T, b: string) =
+    fname(a, toTLM(b))
 
 template doOp2UpdateFloatResult*(fname) =
-  proc fname*[T: TLObj](a: var T, b: T) =
+  proc fname*[T: TLMObj](a: var T, b: T) =
     fname(a.val,  b.val)
     a.isInt = false
-  proc fname*[T: TLObj](a: var T, b: int) =
+  proc fname*[T: TLMObj](a: var T, b: int) =
     fname(a.val,  b.float)
     a.isInt = false
-  proc fname*[T: TLObj](a: var T, b: float) =
+  proc fname*[T: TLMObj](a: var T, b: float) =
     fname(a.val,  b)
     a.isInt = false
-  proc fname*[T: TLObj](a: var T, s: string) =
-    let z = toTL(s)
+  proc fname*[T: TLMObj](a: var T, s: string) =
+    let z = toTLM(s)
     fname(a.val, z.val)
     a.isInt = false
 
 template doFunc1NewAnyResult*(fname) =
-  proc fname*[T: TLObj](a: T): T =
-    result = newTL(fname(a.val))
+  proc fname*[T: TLMObj](a: T): T =
+    result = newTLM(fname(a.val))
     result.isInt = a.isInt
 
 template doFunc1NewFloatResult*(fname) =
-  proc fname*[T: TLObj](a: T): T =
+  proc fname*[T: TLMObj](a: T): T =
     result.val = fname(a.val)
     result.isInt = false
 
 template doFunc2NewAnyResult*(fname) =
-  proc fname*[T: TLObj](a, b: T): T =
-    result = newTL(fname(a.val, b.val))
+  proc fname*[T: TLMObj](a, b: T): T =
+    result = newTLM(fname(a.val, b.val))
     result.isInt = (a.isInt and b.isInt)
 
 template doFunc2NewFloatResult*(fname) =
-  proc fname*[T: TLObj](a, b: T): T =
+  proc fname*[T: TLMObj](a, b: T): T =
     result.val = fname(a.val, b.val)
     result.isInt = false
 
@@ -179,13 +179,13 @@ doCmp2NewAnyResult(`==`)
 doCmp2NewAnyResult(`!=`)
 doCmp2NewAnyResult(`>`)
 doCmp2NewAnyResult(`<`)
-proc `>=`*(a, b: TLObj): bool =
+proc `>=`*(a, b: TLMObj): bool =
   if a.isInt and b.isInt:
     result = (a.toInt >= b.toInt)
   else:
     result = `>`(a,b) or `==`(a,b)
 
-proc `<=`*(a, b: TLObj): bool =
+proc `<=`*(a, b: TLMObj): bool =
   if a.isInt and b.isInt:
     result = (a.toInt <= b.toInt)
   else:
@@ -206,36 +206,36 @@ doFunc1NewFloatResult(arccos)
 doFunc1NewFloatResult(arcsin)
 doFunc2NewFloatResult(arctan2)
 doFunc1NewFloatResult(arctan)
-proc binom*(a, b: TLObj): int = binom(a.toInt, b.toInt)
+proc binom*(a, b: TLMObj): int = binom(a.toInt, b.toInt)
 doFunc1NewFloatResult(cbrt)
 doFunc1NewFloatResult(ceil)
-proc classify*(x: TLObj): FloatClass = classify(x.val)
+proc classify*(x: TLMObj): FloatClass = classify(x.val)
 doFunc1NewFloatResult(cosh)
 doFunc1NewFloatResult(cos)
-proc countBits32*(x: TLObj): int = countBits32(int32(x.toInt))
+proc countBits32*(x: TLMObj): int = countBits32(int32(x.toInt))
 doFunc1NewFloatResult(degToRad)
-proc `div`*(a, b: TLObj): TLObj = toTL(`div`(a.toInt, b.toInt))
-proc `div`*(a: TLObj, b: int): TLObj = toTL(`div`(a.toInt, b))
-proc `div`*(a: TLObj, b: float): TLObj = toTL(`div`(a.toInt, b.toInt))
-proc `div`*(a: TLObj, s: string): TLObj =
-  var b = toTL(s)
+proc `div`*(a, b: TLMObj): TLMObj = toTLM(`div`(a.toInt, b.toInt))
+proc `div`*(a: TLMObj, b: int): TLMObj = toTLM(`div`(a.toInt, b))
+proc `div`*(a: TLMObj, b: float): TLMObj = toTLM(`div`(a.toInt, b.toInt))
+proc `div`*(a: TLMObj, s: string): TLMObj =
+  var b = toTLM(s)
   result = `div`(a, b)
 doFunc1NewFloatResult(`div`)
 doFunc1NewFloatResult(erfc)
 doFunc1NewFloatResult(erf)
 doFunc1NewFloatResult(exp)
-proc fac*(x: TLObj): int = fac(x.toInt)
+proc fac*(x: TLMObj): int = fac(x.toInt)
 doFunc1NewFloatResult(floor)
 #doFunc2NewFloatResult(fmod)
-proc `mod`*(a, b: TLObj): TLObj = toTL(`mod`(a.val, b.val))
-proc `mod`*(a: TLObj, b: int): TLObj = toTL(`mod`(a.val, b.float))
-proc `mod`*(a: TLObj, b: float): TLObj = toTL(`mod`(a.val, b))
-proc `mod`*(a: TLObj, s: string): TLObj =
-  var b = toTL(s)
+proc `mod`*(a, b: TLMObj): TLMObj = toTLM(`mod`(a.val, b.val))
+proc `mod`*(a: TLMObj, b: int): TLMObj = toTLM(`mod`(a.val, b.float))
+proc `mod`*(a: TLMObj, b: float): TLMObj = toTLM(`mod`(a.val, b))
+proc `mod`*(a: TLMObj, s: string): TLMObj =
+  var b = toTLM(s)
   result = `mod`(a, b)
-proc frexp*(x: TLObj, exponent: var int): float = frexp(x.val, exponent)
+proc frexp*(x: TLMObj, exponent: var int): float = frexp(x.val, exponent)
 
-proc gcd*(a, b: TLObj): TLObj =
+proc gcd*(a, b: TLMObj): TLMObj =
   ## Computes the greatest common divisor of ``x`` and ``y``.
   ## Note that for floats, the result cannot always be interpreted as
   ## "greatest decimal `z` such that ``z*N == x and z*M == y``
@@ -246,20 +246,20 @@ proc gcd*(a, b: TLObj): TLObj =
   while y != 0:
     x = x mod y
     swap x, y
-  result = toTL(abs(x))
+  result = toTLM(abs(x))
 doFunc2NewFloatResult(hypot)
-proc isPowerOfTwo*(x: TLObj): bool = isPowerOfTwo(x.toInt)
+proc isPowerOfTwo*(x: TLMObj): bool = isPowerOfTwo(x.toInt)
 
-proc lcm*[T: TLObj](x, y: T): TLObj =
+proc lcm*[T: TLMObj](x, y: T): TLMObj =
   ## Computes the least common multiple of ``x`` and ``y``.
-  result = toTL(`div`(x.toInt, toInt(gcd(x.toFloat, y.toFloat))) * y.toInt)
+  result = toTLM(`div`(x.toInt, toInt(gcd(x.toFloat, y.toFloat))) * y.toInt)
 
 doFunc1NewFloatResult(lgamma)
 doFunc1NewFloatResult(ln)
 doFunc1NewFloatResult(log10)
 doFunc1NewFloatResult(log2)
 doFunc2NewFloatResult(`mod`)
-proc nextPowerOfTwo*(x: TLObj): int = nextPowerOfTwo(x.toInt)
+proc nextPowerOfTwo*(x: TLMObj): int = nextPowerOfTwo(x.toInt)
 doFunc2NewFloatResult(pow)
 doFunc1NewFloatResult(radToDeg)
 
@@ -267,18 +267,18 @@ proc round0(x: float32): float32 {.importc: "roundf", header: "<math.h>".}
 proc round0(x: float64): float64 {.importc: "round", header: "<math.h>".}
 
 doFunc1NewAnyResult(round0)
-proc round*(x: TLObj, places: int = 0): float = round(x.val, places)
+proc round*(x: TLMObj, places: int = 0): float = round(x.val, places)
 doFunc1NewFloatResult(sinh)
 doFunc1NewFloatResult(sin)
-proc splitDecimal*(x: TLObj): tuple[intpart, floatpart: float] = splitDecimal(x.val)
+proc splitDecimal*(x: TLMObj): tuple[intpart, floatpart: float] = splitDecimal(x.val)
 doFunc1NewFloatResult(sqrt)
 doFunc1NewFloatResult(tanh)
 doFunc1NewFloatResult(tan)
 doFunc1NewFloatResult(gamma)
 doFunc1NewFloatResult(trunc)
-#proc `^`*(a, b: TLObj): TLObj = pow(a,b)
+#proc `^`*(a, b: TLMObj): TLMObj = pow(a,b)
 
-proc `==~`(x, y: TLObj; prec: float = 1e-9): bool =
+proc `==~`(x, y: TLMObj; prec: float = 1e-9): bool =
   ## Inexact comparison of float values
   ## return true if absolute difference is < 1e-9
   result = (abs(x.val - y.val) < prec)
@@ -286,10 +286,10 @@ proc `==~`(x, y: TLObj; prec: float = 1e-9): bool =
 ############# TESTING ################
 when isMainModule:
   var
-    a, b, c: TLObj
+    a, b, c: TLMObj
     f1 = 2.0
     i1 = 2
-  a = 2.toTL
+  a = 2.toTLM
   assert(a.isInt == true)
   assert(a.val == 2.0)
   assert(a.val.int == 2)
@@ -300,7 +300,7 @@ when isMainModule:
   assert(a * i1.float == 4.0)
   assert(a * i1 == 4.0)
 
-  b = "222".toTL
+  b = "222".toTLM
   assert("222".parseFloat == b.val)
   assert(b.val == 222.0)
   assert(b.isInt == true)
@@ -323,14 +323,14 @@ when isMainModule:
     assert(c.val == 222*2)
     assert($c == "444")
 
-    assert(b / "2" == toTL(111.0))
-    assert(b / "2.0" == toTL(111.0))
-    assert(b / 2 == toTL(111.0))
-    assert(b / 2.0 == toTL(111.0))
-    assert(b * "2" == toTL(444))
-    assert(b * "2.0" == toTL(444.0))
-    assert(b * 2 == toTL(444))
-    assert(b * 2.0 == toTL(444.0))
+    assert(b / "2" == toTLM(111.0))
+    assert(b / "2.0" == toTLM(111.0))
+    assert(b / 2 == toTLM(111.0))
+    assert(b / 2.0 == toTLM(111.0))
+    assert(b * "2" == toTLM(444))
+    assert(b * "2.0" == toTLM(444.0))
+    assert(b * 2 == toTLM(444))
+    assert(b * 2.0 == toTLM(444.0))
 
   block:  # # test:  += -= *= /=
     b += a
@@ -353,28 +353,28 @@ when isMainModule:
     c = b
     assert(c == b)
     b /= "2"
-    assert(b == toTL(111.0))
+    assert(b == toTLM(111.0))
     b = c
     b /= "2.0"
-    assert(b == toTL(111.0))
+    assert(b == toTLM(111.0))
     b = c
     b /= 2
-    assert(b == toTL(111.0))
+    assert(b == toTLM(111.0))
     b = c
     b /= 2.0
-    assert(b == toTL(111.0))
+    assert(b == toTLM(111.0))
     b = c
     b *= "2"
-    assert(b == toTL(444))
+    assert(b == toTLM(444))
     b = c
     b *= "2.0"
-    assert(b == toTL(444.0))
+    assert(b == toTLM(444.0))
     b = c
     b *= 2
-    assert(b == toTL(444))
+    assert(b == toTLM(444))
     b = c
     b *= 2.0
-    assert(b == toTL(444.0))
+    assert(b == toTLM(444.0))
 
   block:  # test:  == != < > <= >=
     assert(a != b)
@@ -384,27 +384,27 @@ when isMainModule:
     assert(b > a)
     assert(a <= b)
     assert(b >= a)
-    assert(toTL(2) >= toTL("2"))
-    assert(toTL(2.0) >= toTL("2.0"))
-    assert(toTL(2) <= toTL("2"))
-    assert(toTL(2.0) <= toTL("2.0"))
-    assert(toTL(2.0) == toTL("2.0"))
-    assert(toTL(2.12345678) == toTL("2.12345678"))
-    assert(toTL(1/3) != toTL("0.3333333333"))
-    assert(toTL(1/3) ==~ toTL("0.333333333"))
+    assert(toTLM(2) >= toTLM("2"))
+    assert(toTLM(2.0) >= toTLM("2.0"))
+    assert(toTLM(2) <= toTLM("2"))
+    assert(toTLM(2.0) <= toTLM("2.0"))
+    assert(toTLM(2.0) == toTLM("2.0"))
+    assert(toTLM(2.12345678) == toTLM("2.12345678"))
+    assert(toTLM(1/3) != toTLM("0.3333333333"))
+    assert(toTLM(1/3) ==~ toTLM("0.333333333"))
 
   block:  # test: invalid string conversions
-    assert(toTL("wow") == 0.0)
-    assert(toTL(2) + toTL("oops") == 2.0)
-    b = toTL(2) + toTL("oops")
+    assert(toTLM("wow") == 0.0)
+    assert(toTLM(2) + toTLM("oops") == 2.0)
+    b = toTLM(2) + toTLM("oops")
     assert(b == 2)
-    b = toTL("oops")
+    b = toTLM("oops")
     assert(b == 0.0)
-    b = toTL(2)
-    assert(b / toTL("undefined") == 2.0/0.0)
+    b = toTLM(2)
+    assert(b / toTLM("undefined") == 2.0/0.0)
 
   block:   # test: math functions from system math lib
-    b = toTL(-0.2)
+    b = toTLM(-0.2)
     c = b
     var x = b.val
     assert(abs(b) == abs(-0.2))
@@ -433,19 +433,19 @@ when isMainModule:
     assert(gcd(b,c) == gcd(0,0))
     assert(hypot(b,c) == hypot(x,x))
     assert(isPowerOfTwo(b) == isPowerOfTwo(0))
-    b = toTL(2)
-    c = toTL(3)
+    b = toTLM(2)
+    c = toTLM(3)
     d = 2
     e = 3
     assert(lcm(b,c) == lcm(d, e))
-    b = toTL(-0.2)
+    b = toTLM(-0.2)
     assert(lgamma(b) == lgamma(-0.2))
     assert(ln(abs(b)) == ln(0.2))
     assert(log10(abs(b)) == log10(0.2))
     assert(log2(abs(b)) == log2(0.2))
 
-    b = toTL(2)
-    c = toTL(3)
+    b = toTLM(2)
+    c = toTLM(3)
     d = 2
     e = 3
     assert(`mod`(b,c) == `mod`(d,e))
@@ -453,12 +453,12 @@ when isMainModule:
     assert(nextPowerOfTwo(b) == nextPowerOfTwo(d))
     assert(pow(b,c) == pow(2.0, 3.0))
     assert(radToDeg(b) == radToDeg(2.0))
-    b = toTL(2.34567)
+    b = toTLM(2.34567)
     assert(round0(b) == 2.0)
     assert(round0(b * -1) == -2)
     assert(round(b,3) == 2.346)
 
-    b = toTL(-0.2)
+    b = toTLM(-0.2)
     x = b.val
     assert(sinh(b) == sinh(x))
     assert(sin(b) == sin(x))
@@ -467,6 +467,6 @@ when isMainModule:
     assert(gamma(b) == gamma(x))
     assert(trunc(b) == trunc(x))
 
-    assert(sqrt(toTL(43)) == sqrt(43.0))
-    assert(splitDecimal(toTL(43.21)) == splitDecimal(43.21))
+    assert(sqrt(toTLM(43)) == sqrt(43.0))
+    assert(splitDecimal(toTLM(43.21)) == splitDecimal(43.21))
     #assert((b ^ c) == (d ^ e))
