@@ -29,10 +29,10 @@ For more examples, view the assertions at the end of the tlMath.nim file.
 
 ```Nim
   var
-    a, b, c: TLObj
+    a, b, c: TLMObj
     f1 = 2.0
     i1 = 2
-  a = 2.toTL
+  a = 2.toTLM
   assert( a.isInt      == true )
   assert( a.val        == 2.0  )
   assert( a.val.int    == 2    )
