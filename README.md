@@ -25,7 +25,7 @@ using a non-numeric string is the same as doing that
 operation with a zero float value.
 
 ## Examples
-for more examples, view the assertions at the end of the tlMath.nim file.
+For more examples, view the assertions at the end of the tlMath.nim file.
 
 ```Nim
   var
